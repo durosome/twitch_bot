@@ -35,15 +35,10 @@ class Socket:
         response = self.socket.recv(2048).decode('utf-8')
         return response
 
-    def listener(self):
-        while True:
-            response = self.socket.recv(2048).decode('utf-8')
-            if response.startswith('PING'):
-                self.socket.send("PONG\n".encode('utf-8'))
-            else:
-                print(response)
-            time.sleep(5)
-
 
 test_socket = Socket(keys.CHANNEL_NAME, keys.BOT_USERNAME, keys.BOT_TOKEN)
-test_socket.listener()
+
+while True:
+    response = test_socket.socket.recv(2048).decode('utf-8')
+    print(response)
+    time.sleep(5)
