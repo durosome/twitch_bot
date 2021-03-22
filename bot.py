@@ -3,7 +3,6 @@ import string
 import keys
 import sys
 import time
-import asyncio
 
 
 class Socket:
@@ -31,14 +30,10 @@ class Socket:
         self.socket.send(f"NICK {bot_username}\n".encode('utf-8'))  # send bot twitch login
         self.socket.send(f"JOIN {channel_name}\n".encode('utf-8'))  # send channel's name what we want to connect
 
-    def response(self):
-        response = self.socket.recv(2048).decode('utf-8')
-        return response
-
 
 class Listener:
     """
-    function that listen socket at background and give response
+    function that listen socket at background and give response to ping
     -example usage:
                 -- create a listener:
                     CHANNEL_NAME = '#the_name_of_twitch_channel'
@@ -47,20 +42,40 @@ class Listener:
 
                     test_socket = Socket(CHANNEL_NAME, BOT_USERNAME, BOT_TOKEN)
                     test_listener = Listener(test_socket)
-                -- get response from socket:
+
+                -- get response/send respond from/to socket:
                     test_listener.get_response()
+
+                -- self.send_message('SeriousSloth')
     """
 
     def __init__(self, socket):
-        pass
+        self.socket = socket
 
-    def get_response(self):
-        pass
+    def send_message(self, message):
+        self.socket.socket.send(("PRIVMSG " + keys.CHANNEL_NAME + " :" + message + "\r\n").encode('utf-8'))
+
+    def parse_message(self, response):
+        user = response.split(':')[1]
+        user = user.split('!')[0]
+        message = response.split(':')[2]
+        print(user, ': ', message)
+        return(user, message)
+
+    def ping_response(self, response):
+        if response.startswith('PING'):
+            self.socket.socket.send("PONG\n".encode('utf-8'))
+            self.send_message('SeriousSloth')
+
+    def listen(self):
+        self.send_message('I am connected. All systems report normal, Captain. SeemsGood')
+        while True:
+            self.response = self.socket.socket.recv(2048).decode('utf-8')
+            self.ping_response(self.response)
+            self.parse_message(self.response)
+            time.sleep(5)
 
 
 test_socket = Socket(keys.CHANNEL_NAME, keys.BOT_USERNAME, keys.BOT_TOKEN)
-
-while True:
-    response = test_socket.socket.recv(2048).decode('utf-8')
-    print(test_socket.response())
-    time.sleep(5)
+test_listener = Listener(test_socket)
+test_listener.listen()
