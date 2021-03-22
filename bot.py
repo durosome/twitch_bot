@@ -1,8 +1,9 @@
 import socket
 import string
-import keys
+import twitch_keys
 import sys
 import time
+import discord
 
 
 class Socket:
@@ -24,7 +25,7 @@ class Socket:
 
     def __init__(self, channel_name, bot_username, bot_token):
         self.socket = socket.socket()  # create socket
-        self.socket.connect((keys.HOST, keys.PORT))  # connecting to the host
+        self.socket.connect((twitch_keys.HOST, twitch_keys.PORT))  # connecting to the host
         """ AUTH """
         self.socket.send(f"PASS {bot_token}\n".encode('utf-8'))  # send oauth:123423512351345 stuff
         self.socket.send(f"NICK {bot_username}\n".encode('utf-8'))  # send bot twitch login
@@ -53,14 +54,14 @@ class Listener:
         self.socket = socket
 
     def send_message(self, message):
-        self.socket.socket.send(("PRIVMSG " + keys.CHANNEL_NAME + " :" + message + "\r\n").encode('utf-8'))
+        self.socket.socket.send(("PRIVMSG " + twitch_keys.CHANNEL_NAME + " :" + message + "\r\n").encode('utf-8'))
 
     def parse_message(self, response):
         user = response.split(':')[1]
         user = user.split('!')[0]
         message = response.split(':')[2]
         print(user, ': ', message)
-        return(user, message)
+        return (user, message)
 
     def ping_response(self, response):
         if response.startswith('PING'):
@@ -76,6 +77,21 @@ class Listener:
             time.sleep(5)
 
 
-test_socket = Socket(keys.CHANNEL_NAME, keys.BOT_USERNAME, keys.BOT_TOKEN)
+class Discord(discord.Client):
+    def __init__(self):
+        super().__init__()
+        self.TOKEN = twitch_keys.DISCORD_TOKEN
+
+    async def on_ready(self):
+        print('Logged on as {0}!'.format(self.user))
+
+    async def on_message(self, message):
+        print('Message from {0.author}: {0.content}'.format(message))
+
+
+test_discord_bot = Discord()
+test_discord_bot.run(test_discord_bot.TOKEN)
+
+test_socket = Socket(twitch_keys.CHANNEL_NAME, twitch_keys.BOT_USERNAME, twitch_keys.BOT_TOKEN)
 test_listener = Listener(test_socket)
 test_listener.listen()
