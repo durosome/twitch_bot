@@ -1,9 +1,8 @@
 import socket
 import string
-import twitch_keys
 import sys
 import time
-import discord
+import twitch_keys
 
 
 class Socket:
@@ -61,7 +60,7 @@ class Listener:
         user = user.split('!')[0]
         message = response.split(':')[2]
         print(user, ': ', message)
-        return (user, message)
+        return ()
 
     def ping_response(self, response):
         if response.startswith('PING'):
@@ -76,21 +75,6 @@ class Listener:
             self.parse_message(self.response)
             time.sleep(5)
 
-
-class Discord(discord.Client):
-    def __init__(self):
-        super().__init__()
-        self.TOKEN = twitch_keys.DISCORD_TOKEN
-
-    async def on_ready(self):
-        print('Logged on as {0}!'.format(self.user))
-
-    async def on_message(self, message):
-        print('Message from {0.author}: {0.content}'.format(message))
-
-
-test_discord_bot = Discord()
-test_discord_bot.run(test_discord_bot.TOKEN)
 
 test_socket = Socket(twitch_keys.CHANNEL_NAME, twitch_keys.BOT_USERNAME, twitch_keys.BOT_TOKEN)
 test_listener = Listener(test_socket)
